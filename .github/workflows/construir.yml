@@ -1,0 +1,32 @@
+name: Construir ChpPagos
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Abrir el zip
+        run: |
+          if [ -f chppagos.zip ]; then unzip -o -q chppagos.zip -d . ; fi
+          ls
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+      - name: Armar APK
+        run: gradle assembleRelease --no-daemon
+      - name: Nombrar APK
+        run: cp app/build/outputs/apk/release/app-release.apk ChpPagos-v${{ github.run_number }}.apk
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ github.run_number }}
+          name: ChpPagos v${{ github.run_number }}
+          files: ChpPagos-v${{ github.run_number }}.apk
